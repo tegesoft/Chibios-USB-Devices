@@ -27,6 +27,7 @@
 #define SCSI_CMD_SEND_DIAGNOSTIC				0x1D
 #define SCSI_CMD_MODE_SENSE_6                   0x1A
 #define SCSI_CMD_START_STOP_UNIT				0x1B
+#define SCSI_CMD_READ_FORMAT_CAPACITIES			0x23
 
 #define MSD_COMMAND_PASSED 0x00
 #define MSD_COMMAND_FAILED 0x01
@@ -77,9 +78,9 @@ PACK_STRUCT_BEGIN typedef struct {
 	uint8_t status;
 } PACK_STRUCT_STRUCT msd_csw_t PACK_STRUCT_END;
 
-typedef struct {
+PACK_STRUCT_BEGIN typedef struct {
 		uint8_t byte[18];
-} __attribute__ ((packed)) scsi_sense_response_t;
+} PACK_STRUCT_STRUCT scsi_sense_response_t PACK_STRUCT_END;
 
 PACK_STRUCT_BEGIN typedef struct
 {
@@ -109,6 +110,13 @@ PACK_STRUCT_BEGIN typedef struct {
 	uint8_t loej_start;
 	uint8_t control;
 } PACK_STRUCT_STRUCT SCSIStartStopUnitRequest_t;
+
+PACK_STRUCT_BEGIN typedef struct {
+	uint8_t reserved[3];
+    uint8_t capacity_list_length;
+	uint32_t block_count;
+    uint32_t desc_and_block_length;
+} PACK_STRUCT_STRUCT SCSIReadFormatCapacitiesResponse_t PACK_STRUCT_END;
 
 typedef struct USBMassStorageDriver USBMassStorageDriver;
 
