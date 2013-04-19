@@ -61,6 +61,14 @@ typedef struct {
    * @brief Block device to use for storage
    */
   BaseBlockDevice *bbdp;
+
+  /**
+   * @brief Optional callback that will be called whenever there is
+   *        read/write activity
+   * @note  The callback is called with argument TRUE when activity starts,
+   *        and FALSE when activity stops.
+   */
+  void (*rw_activity_callback)(bool_t);
 } USBMassStorageConfig;
 
 /**

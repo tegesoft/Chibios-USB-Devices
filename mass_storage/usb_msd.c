@@ -122,16 +122,6 @@ static uint8_t rw_buf[2][512];
                       | (((x) & 0xFF00) >> 8))
 
 /**
- * @brief Macros that can be overriden to do something when read/write transfers are active
- */
-#if !defined(MSD_RW_LED_ON)
-    #define MSD_RW_LED_ON()
-#endif
-#if !defined(MSD_RW_LED_OFF)
-    #define MSD_RW_LED_OFF()
-#endif
-
-/**
  * @brief USB Device Descriptor
  */
 static const uint8_t msd_device_descriptor_data[18] = {
@@ -791,9 +781,11 @@ bool_t msd_read_command_block(USBMassStorageDriver *msdp) {
         break;
     case SCSI_CMD_READ_10:
     case SCSI_CMD_WRITE_10:
-        MSD_RW_LED_ON();
+        if (msdp->config->rw_activity_callback)
+            msdp->config->rw_activity_callback(TRUE);
         sleep = msd_scsi_process_start_read_write_10(msdp);
-        MSD_RW_LED_OFF();
+        if (msdp->config->rw_activity_callback)
+            msdp->config->rw_activity_callback(FALSE);
         break;
     case SCSI_CMD_SEND_DIAGNOSTIC:
         sleep = msd_scsi_process_send_diagnostic(msdp);
