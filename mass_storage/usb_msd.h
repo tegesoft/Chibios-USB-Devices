@@ -49,14 +49,28 @@ typedef enum {
 } msd_state_t;
 
 /**
+ * @brief Driver configuration structure
+ */
+typedef struct {
+  /**
+   * @brief USB driver to use for communication
+   */
+  USBDriver *usbp;
+
+  /**
+   * @brief Block device to use for storage
+   */
+  BaseBlockDevice *bbdp;
+} USBMassStorageConfig;
+
+/**
  * @brief   USB mass storage driver structure.
  * @details This structure holds all the states and members of a USB mass
  *          storage driver.
  */
-struct USBMassStorageDriver {
-	USBDriver *usbp;
+typedef struct {
+    const USBMassStorageConfig* config;
 	BinarySemaphore bsem;
-	BaseBlockDevice *bbdp;
 	EventSource evt_connected, evt_ejected;
 	BlockDeviceInfo block_dev_info;
 	msd_state_t state;
@@ -64,21 +78,20 @@ struct USBMassStorageDriver {
 	msd_csw_t csw;
 	msd_scsi_sense_response_t sense;
 	bool_t result;
-};
-typedef struct USBMassStorageDriver USBMassStorageDriver;
+} USBMassStorageDriver;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @brief   Initialize USB mass storage on the given USB driver, using the given block device.
+ * @brief   Initialize USB mass storage with the given configuration.
  * @details This function is sufficient to have USB mass storage running, it internally
  *          runs a thread that handles USB requests and transfers.
  *          The block device must be connected but no file system must be mounted,
  *          everything is handled by the host system.
  */
-void msdInit(USBDriver *usbp, BaseBlockDevice *bdp, USBMassStorageDriver *msdp);
+void msdInit(USBMassStorageDriver *msdp, const USBMassStorageConfig *config);
 
 #ifdef __cplusplus
 }
