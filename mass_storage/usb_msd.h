@@ -40,6 +40,24 @@ PACK_STRUCT_BEGIN typedef struct {
 } PACK_STRUCT_STRUCT msd_scsi_sense_response_t PACK_STRUCT_END;
 
 /**
+ * @brief structure holding the data to reply to an INQUIRY SCSI command
+ */
+PACK_STRUCT_BEGIN typedef struct
+{
+    uint8_t peripheral;
+    uint8_t removable;
+    uint8_t version;
+    uint8_t response_data_format;
+    uint8_t additional_length;
+    uint8_t sccstp;
+    uint8_t bqueetc;
+    uint8_t cmdque;
+    uint8_t vendor_id[8];
+    uint8_t product_id[16];
+    uint8_t product_rev[4];
+} PACK_STRUCT_STRUCT msd_scsi_inquiry_response_t PACK_STRUCT_END;
+
+/**
  * @brief Possible states for the USB mass storage driver
  */
 typedef enum {
@@ -97,52 +115,70 @@ typedef enum {
  * @brief Driver configuration structure
  */
 typedef struct {
-  /**
-   * @brief USB driver to use for communication
-   */
-  USBDriver *usbp;
+    /**
+    * @brief USB driver to use for communication
+    */
+    USBDriver *usbp;
 
-  /**
-   * @brief Block device to use for storage
-   */
-  BaseBlockDevice *bbdp;
+    /**
+    * @brief Block device to use for storage
+    */
+    BaseBlockDevice *bbdp;
 
-  /**
-   * @brief Optional callback that will be called whenever there is
-   *        read/write activity
-   * @note  The callback is called with argument TRUE when activity starts,
-   *        and FALSE when activity stops.
-   */
-  void (*rw_activity_callback)(bool_t);
+    /**
+    * @brief Optional callback that will be called whenever there is
+    *        read/write activity
+    * @note  The callback is called with argument TRUE when activity starts,
+    *        and FALSE when activity stops.
+    */
+    void (*rw_activity_callback)(bool_t);
 
-  /**
-   * @brief Device description
-   * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_DEVICE_DESCRIPTOR macro.
-   *        If null, a default device description is used.
-   */
-  const USBDescriptor* device_descriptor;
+    /**
+    * @brief Device description
+    * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_DEVICE_DESCRIPTOR macro.
+    *        If null, a default device description is used.
+    */
+    const USBDescriptor* device_descriptor;
 
-  /**
-   * @brief Vendor description
-   * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_STRING_DESCRIPTOR macro.
-   *        If null, a default vendor description is used.
-   */
-  const USBDescriptor* vendor_descriptor;
+    /**
+    * @brief Vendor description
+    * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_STRING_DESCRIPTOR macro.
+    *        If null, a default vendor description is used.
+    */
+    const USBDescriptor* vendor_descriptor;
 
-  /**
-   * @brief Product description
-   * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_STRING_DESCRIPTOR macro.
-   *        If null, a default product description is used.
-   */
-  const USBDescriptor* product_descriptor;
+    /**
+    * @brief Product description
+    * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_STRING_DESCRIPTOR macro.
+    *        If null, a default product description is used.
+    */
+    const USBDescriptor* product_descriptor;
 
-  /**
-   * @brief Serial number description
-   * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_STRING_DESCRIPTOR macro.
-   *        If null, a default serial number description is used.
-   *        This description string must contain at least 12 valid digits.
-   */
-  const USBDescriptor* serial_number_descriptor;
+    /**
+    * @brief Serial number description
+    * @note  To define such a valid USBDescriptor, see the MSD_DECLARE_STRING_DESCRIPTOR macro.
+    *        If null, a default serial number description is used.
+    *        This description string must contain at least 12 valid digits.
+    */
+    const USBDescriptor* serial_number_descriptor;
+
+    /**
+    * @brief Short vendor identification
+    * @note  ASCII characters only, maximum 8 characters (pad with zeroes).
+    */
+    uint8_t short_vendor_id[8];
+
+    /**
+    * @brief Short product identification
+    * @note  ASCII characters only, maximum 16 characters (pad with zeroes).
+    */
+    uint8_t short_product_id[16];
+
+    /**
+    * @brief Short product revision
+    * @note  ASCII characters only, maximum 4 characters (pad with zeroes).
+    */
+    uint8_t short_product_version[4];
 
 } USBMassStorageConfig;
 
@@ -160,6 +196,7 @@ typedef struct {
 	msd_cbw_t cbw;
 	msd_csw_t csw;
 	msd_scsi_sense_response_t sense;
+	msd_scsi_inquiry_response_t inquiry;
 	bool_t result;
 } USBMassStorageDriver;
 

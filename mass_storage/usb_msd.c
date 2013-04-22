@@ -67,24 +67,6 @@
 #define SCSI_ASENSEQ_OPERATION_IN_PROGRESS             0x07
 
 /**
- * @brief Response to a regular INQUIRY SCSI command
- */
-PACK_STRUCT_BEGIN typedef struct
-{
-    uint8_t peripheral;
-    uint8_t removable;
-    uint8_t version;
-    uint8_t response_data_format;
-    uint8_t additional_length;
-    uint8_t sccstp;
-    uint8_t bqueetc;
-    uint8_t cmdque;
-    uint8_t vendorID[8];
-    uint8_t productID[16];
-    uint8_t productRev[4];
-} PACK_STRUCT_STRUCT msd_scsi_inquiry_response_t PACK_STRUCT_END;
-
-/**
  * @brief Response to a READ_CAPACITY_10 SCSI command
  */
 PACK_STRUCT_BEGIN typedef struct {
@@ -428,22 +410,7 @@ bool_t msd_scsi_process_inquiry(USBMassStorageDriver *msdp) {
     }
     else
     {
-        static const msd_scsi_inquiry_response_t inquiry = {
-            0x00,                        /* direct access block device  */
-            0x80,                        /* removable                   */
-            0x04,                         /* SPC-2                       */
-            0x02,                        /* response data format        */
-            0x20,                        /* response has 0x20 + 4 bytes */
-            0x00,
-            0x00,
-            0x00,
-            "Chibios",
-            "Mass Storage",
-            {'v', CH_KERNEL_MAJOR + '0', '.', CH_KERNEL_MINOR + '0'},
-        };
-
-        usbPrepareTransmit(msdp->config->usbp, USB_MS_DATA_EP, (uint8_t *)&inquiry,
-                           sizeof(msd_scsi_inquiry_response_t));
+        usbPrepareTransmit(msdp->config->usbp, USB_MS_DATA_EP, (uint8_t *)&msdp->inquiry, sizeof(msdp->inquiry));
 
         chSysLock();
         usbStartTransmitI(msdp->config->usbp, USB_MS_DATA_EP);
@@ -901,13 +868,27 @@ void msdInit(USBMassStorageDriver *msdp, const USBMassStorageConfig *config) {
     /* initialise binary semaphore as taken */
     chBSemInit(&msdp->bsem, TRUE);
 
-    /* initialise sense values to zero */
+    /* initialise the sense data structure */
     for (i = 0; i < sizeof(msdp->sense.byte); i++)
         msdp->sense.byte[i] = 0x00;
+    msdp->sense.byte[0] = 0x70; /* response code */
+    msdp->sense.byte[7] = 0x0A; /* additional sense length */
 
-    /* response code = 0x70, additional sense length = 0x0A */
-    msdp->sense.byte[0] = 0x70;
-    msdp->sense.byte[7] = 0x0A;
+    /* initialize the inquiry data structure */
+    msdp->inquiry.peripheral = 0x00;           /* direct access block device  */
+    msdp->inquiry.removable = 0x80;            /* removable                   */
+    msdp->inquiry.version = 0x04;              /* SPC-2                       */
+    msdp->inquiry.response_data_format = 0x02; /* response data format        */
+    msdp->inquiry.additional_length = 0x20;    /* response has 0x20 + 4 bytes */
+    msdp->inquiry.sccstp = 0x00;
+    msdp->inquiry.bqueetc = 0x00;
+    msdp->inquiry.cmdque = 0x00;
+    for (i = 0; i < sizeof(msdp->config->short_vendor_id); ++i)
+        msdp->inquiry.vendor_id[i] = config->short_vendor_id[i];
+    for (i = 0; i < sizeof(msdp->config->short_product_id); ++i)
+        msdp->inquiry.product_id[i] = config->short_product_id[i];
+    for (i = 0; i < sizeof(msdp->config->short_product_version); ++i)
+        msdp->inquiry.product_rev[i] = config->short_product_version[i];
 
     /* make sure block device is working and get info */
     while (TRUE) {
