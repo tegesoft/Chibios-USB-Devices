@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* endpoint index */
+#define USB_MS_DATA_EP 1
+
 /* USB device descriptor */
 static const uint8_t deviceDescriptorData[] =
 {
@@ -202,6 +205,7 @@ static USBMassStorageConfig msdConfig =
 {
     &USBD2,
     (BaseBlockDevice*)&SDCD1,
+    USB_MS_DATA_EP,
     &usbActivity,
     "DVendor",
     "DProduct",

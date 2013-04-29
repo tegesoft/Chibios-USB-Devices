@@ -67,11 +67,6 @@ typedef enum {
 } msd_state_t;
 
 /**
- * @brief Index of the mass storage data endpoint
- */
-#define USB_MS_DATA_EP 3
-
-/**
  * @brief Driver configuration structure
  */
 typedef struct {
@@ -84,6 +79,11 @@ typedef struct {
     * @brief Block device to use for storage
     */
     BaseBlockDevice *bbdp;
+
+    /**
+    * @brief Index of the USB endpoint to use for transfers
+    */
+    usbep_t bulk_ep;
 
     /**
     * @brief Optional callback that will be called whenever there is
