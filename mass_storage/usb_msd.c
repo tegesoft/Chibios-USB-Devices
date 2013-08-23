@@ -135,15 +135,13 @@ static const USBEndpointConfig ep_data_config = {
 /**
  * @brief   USB device configured handler.
  *
- * @param[in] usbp      pointer to the @p USBDriver object
+ * @param[in] msdp      pointer to the @p USBMassStorageDriver object
  *
  * @iclass
  */
-void msdConfigureHookI(USBDriver *usbp)
+void msdConfigureHookI(USBMassStorageDriver *msdp)
 {
-    USBMassStorageDriver *msdp = (USBMassStorageDriver *)usbp->param;
-
-    usbInitEndpointI(usbp, msdp->config->bulk_ep, &ep_data_config);
+    usbInitEndpointI(msdp->config->usbp, msdp->config->bulk_ep, &ep_data_config);
     chBSemSignalI(&msdp->bsem);
     chEvtBroadcastI(&msdp->evt_connected);
 }
@@ -225,7 +223,7 @@ static void msd_handle_end_point_notification(USBDriver *usbp, usbep_t ep) {
     (void)ep;
 
     chSysLockFromIsr();
-    chBSemSignalI(&((USBMassStorageDriver *)usbp->param)->bsem);
+    chBSemSignalI(&((USBMassStorageDriver *)usbp->in_params[ep])->bsem);
     chSysUnlockFromIsr();
 }
 
@@ -804,7 +802,8 @@ void msdStart(USBMassStorageDriver *msdp, const USBMassStorageConfig *config) {
 
     /* store the pointer to the mass storage driver into the user param
        of the USB driver, so that we can find it back in callbacks */
-    config->usbp->param = (void *)msdp;
+    config->usbp->in_params[config->bulk_ep] = (void *)msdp;
+    config->usbp->out_params[config->bulk_ep] = (void *)msdp;
 
     /* run the thread */
     msdp->thread = chThdCreateStatic(mass_storage_thread_wa, sizeof(mass_storage_thread_wa), NORMALPRIO, mass_storage_thread, msdp);
@@ -824,4 +823,8 @@ void msdStop(USBMassStorageDriver *msdp) {
     chBSemSignal(&msdp->bsem);
     chThdWait(msdp->thread);
     msdp->thread = NULL;
+
+    /* release the user params in the USB driver */
+    msdp->config->usbp->in_params[msdp->config->bulk_ep] = NULL;
+    msdp->config->usbp->out_params[msdp->config->bulk_ep] = NULL;
 }

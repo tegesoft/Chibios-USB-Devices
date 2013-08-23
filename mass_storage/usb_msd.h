@@ -160,11 +160,11 @@ void msdStop(USBMassStorageDriver *msdp);
 /**
  * @brief   USB device configured handler.
  *
- * @param[in] usbp      pointer to the @p USBDriver object
+ * @param[in] msdp      pointer to the @p USBMassStorageDriver object
  *
  * @iclass
  */
-void msdConfigureHookI(USBDriver *usbp);
+void msdConfigureHookI(USBMassStorageDriver *msdp);
 
 /**
  * @brief   Default requests hook.
